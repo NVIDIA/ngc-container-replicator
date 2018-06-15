@@ -1,0 +1,4 @@
+FROM replicator
+
+RUN pip install pytest
+ENTRYPOINT ["py.test"]

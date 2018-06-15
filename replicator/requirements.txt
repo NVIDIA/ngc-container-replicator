@@ -1,0 +1,2 @@
+PyYAML==3.12
+protobuf==3.5.1
