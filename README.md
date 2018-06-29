@@ -47,8 +47,13 @@ make dev
 py.test
 ```
 
-## TODOs
+## Copyright and License
 
-- [x] save markdown readmes for each image.  these are not version controlled
-- [ ] test local registry push service.  coded, but not tested
-- [ ] add templater to workflow
+This project is released under the [BSD 3-clause license](https://github.com/NVIDIA/ngc-container-replicator/blob/master/LICENSE).
+
+## Issues and Contributing
+
+A signed copy of the [Contributor License Agreement](https://raw.githubusercontent.com/NVIDIA/ngc-container-replicator/master/CLA) needs to be provided to <a href="mailto:deepops@nvidia.com">deepops@nvidia.com</a> before any change can be accepted.
+
+* Please let us know by [filing a new issue](https://github.com/NVIDIA/ngc-container-replicator/issues/new)
+* You can contribute by opening a [pull request](https://help.github.com/articles/using-pull-requests/)
