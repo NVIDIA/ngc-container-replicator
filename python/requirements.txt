@@ -4,7 +4,7 @@ click==6.7
 docker==2.4.2
 docker-pycreds==0.2.1
 idna==2.5
-requests==2.18.2
+requests>=2.20.0
 six==1.10.0
 urllib3==1.22
 websocket-client==0.44.0
