@@ -41,6 +41,7 @@ class Replicator:
         self.nvcr_client.login(username="$oauthtoken", password=api_key, registry="nvcr.io/v2")
         self.registry_client = None
         self.min_version = self.config("min_version")
+        self.py_version = self.config("py_version")
         self.images = self.config("image") or []
         self.progress = Progress(uri=self.config("progress_uri"))
         if self.config("registry_url"):
@@ -211,6 +212,10 @@ class Replicator:
                 return False
         # if you are here, you have passed the name test
         # now, we check the version of the container by trying to extract the YY.MM details from the tag
+        if self.py_version:
+            if tag.find(self.py_version) == -1:
+                log.debug("tag {} fails py_version {} filter".format(tag, self.py_version))
+                return False
         version_regex = re.compile(r"^(\d\d\.\d\d)")
         float_tag = version_regex.findall(tag)
         if float_tag and len(float_tag) == 1:
@@ -299,6 +304,7 @@ class Replicator:
 @click.option("--project", default="nvidia")
 @click.option("--output-path", default="/output")
 @click.option("--min-version")
+@click.option("--py-version")
 @click.option("--image", multiple=True)
 @click.option("--registry-url")
 @click.option("--registry-username")
