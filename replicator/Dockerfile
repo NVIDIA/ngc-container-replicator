@@ -7,4 +7,9 @@ RUN mkdir -p /output
 RUN python setup.py install
 ENTRYPOINT ["ngc_replicator"]
 
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        jq && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY scripts/docker-utils /usr/bin/docker-utils
