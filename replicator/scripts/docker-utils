@@ -86,7 +86,7 @@ fi
 
 SEC_FLAG=""
 
-if [[ ${INSECURE_REGISTRY:""} ]] && [[ $(isTruthy "$INSECURE_REGISTRY") ]]; then
+if [[ ${INSECURE_REGISTRY:-""} ]] && [[ $(isTruthy "$INSECURE_REGISTRY") ]]; then
     SEC_FLAG="-k"
 fi
 
