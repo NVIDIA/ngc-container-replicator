@@ -300,7 +300,7 @@ class Replicator:
 
 
 @click.command()
-@click.option("--api-key")
+@click.option("--api-key", envvar="NGC_REPLICATOR_API_KEY")
 @click.option("--project", default="nvidia")
 @click.option("--output-path", default="/output")
 @click.option("--min-version")
