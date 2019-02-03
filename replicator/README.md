@@ -38,6 +38,94 @@ Note: a `state.yml` file will be created the output directory.  This saved state
 avoid pulling images that were previously pulled.  If you wish to repull and save an image, just
 delete the entry in `state.yml` corresponding to the `image_name` and `tag` you wish to refresh.
 
+## Kubernetes Deployment
+
+If you don't already have a `deepops` namespace, create one now.
+
+```
+kubectl create namespace deepops
+```
+
+Next, create a secret with your NGC API Key
+
+```
+kubectl -n deepops create secret generic  ngc-secret
+--from-literal=apikey=<your-api-key-goes-here>
+```
+
+Finally, create a `CronJob` that executes the replicator on a schedule.  This
+eample run the replicator every hour.  Note: This example used 
+[Rook](https://rook.io) block storage to provide a persistent volume to hold the
+`state.yml` between executions.  This ensures you will only download new
+container images. For more details, see our [DeepOps
+project](https://github.com/nvidia/deepops).
+
+```
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: replicator-config
+  namespace: deepops
+data:
+  ngc-update.sh: |
+    #!/bin/bash
+    ngc_replicator                                        \
+      --project=nvidia                                    \
+      --min-version=$(date +"%y.%m" -d "1 month ago")     \
+      --py-version=py3                                    \
+      --image=tensorflow --image=pytorch --image=tensorrt \
+      --no-exporter                                       \
+      --registry-url=registry.local
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: ngc-replicator
+  namespace: deepops
+  labels:
+    app: ngc-replicator
+spec:
+  schedule: "0 */1 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          nodeSelector:
+            node-role.kubernetes.io/master: ""
+          containers:
+            - name: replicator
+              image: deepops/replicator
+              imagePullPolicy: Always
+              command: [ "/bin/sh", "-c", "/ngc-update/ngc-update.sh" ]
+              env:
+              - name: NGC_REPLICATOR_API_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: ngc-secret
+                    key: apikey
+              volumeMounts:
+              - name: registry-config
+                mountPath: /ngc-update
+              - name: docker-socket
+                mountPath: /var/run/docker.sock
+              - name: ngc-replicator-storage
+                mountPath: /output
+          volumes:
+            - name: registry-config
+              configMap:
+                name: replicator-config
+                defaultMode: 0777
+            - name: docker-socket
+              hostPath:
+                path: /var/run/docker.sock
+                type: File
+            - name: ngc-replicator-storage
+              persistentVolumeClaim:
+                claimName: ngc-replicator-pvc
+          restartPolicy: Never
+```
+
 ## Developer Quickstart
 
 ```
