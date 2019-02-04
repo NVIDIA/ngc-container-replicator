@@ -53,6 +53,28 @@ kubectl -n deepops create secret generic  ngc-secret
 --from-literal=apikey=<your-api-key-goes-here>
 ```
 
+Next, create a persistent volume claim that will life outside the lifecycle of the CronJob. If
+you are using [DeepOps](https://github.com/nvidia/deepops) you can use a Rook/Ceph PVC similar
+to:
+
+```
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ngc-replicator-pvc
+  namespace: deepops
+  labels:
+    app: ngc-replicator
+spec:
+  storageClassName: rook-raid0-retain  # <== Replace with your StorageClass
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 32Mi
+```
+
 Finally, create a `CronJob` that executes the replicator on a schedule.  This
 eample run the replicator every hour.  Note: This example used 
 [Rook](https://rook.io) block storage to provide a persistent volume to hold the
@@ -76,7 +98,7 @@ data:
       --py-version=py3                                    \
       --image=tensorflow --image=pytorch --image=tensorrt \
       --no-exporter                                       \
-      --registry-url=registry.local
+      --registry-url=registry.local  # <== Replace with your local repo
 ---
 apiVersion: batch/v1beta1
 kind: CronJob
