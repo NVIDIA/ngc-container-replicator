@@ -117,3 +117,6 @@ class DockerClient(BaseClient):
             raise RuntimeError("Image {} not found".format(url))
         log.debug("loaded {} from {}".format(url, filename))
         return url
+
+    def build(self, *, target_image, dockerfile="Dockerfile"):
+        self.call("docker build -f {} -t {} .".format(dockerfile, target_image))
