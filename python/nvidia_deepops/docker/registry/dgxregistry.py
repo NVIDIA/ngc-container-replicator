@@ -157,5 +157,8 @@ class DGXRegistry(BaseRegistry):
                     if not filter_fn(name=name, tag=tag["name"],
                                      docker_id=tag["dockerImageId"]):
                         continue
-                state[name][tag["name"]] = tag["dockerImageId"]
+                state[name][tag["name"]] = {
+                    "docker_id": tag["dockerImageId"],
+                    "registry": "nvcr.io",
+                }
         return state

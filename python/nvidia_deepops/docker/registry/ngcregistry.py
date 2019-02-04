@@ -264,5 +264,8 @@ class NGCRegistry(BaseRegistry):
                         # if filter_fn is false, then the image is not added to
                         # the state
                         continue
-                state[name][tag] = docker_id
+                state[name][tag] = {
+                    "docker_id": docker_id,
+                    "registry": "nvcr.io",
+                }
         return state
