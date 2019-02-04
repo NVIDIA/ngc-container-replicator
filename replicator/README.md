@@ -158,5 +158,5 @@ py.test
 ## TODOs
 
 - [x] save markdown readmes for each image.  these are not version controlled
-- [ ] test local registry push service.  coded, but not tested
+- [x] test local registry push service.  coded, beta testing
 - [ ] add templater to workflow

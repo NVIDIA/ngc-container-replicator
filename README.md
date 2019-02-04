@@ -12,11 +12,11 @@ mount that directory. In the following example, we will collect our images in
 `/tmp` on the host.
 
 Use `--min-version` to limit the number of versions to download.  In the example
-below, we will only clone versions `18.04` and later DL framework images.
+below, we will only clone versions `17.10` and later DL framework images.
 
 ```
 docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock -v /tmp:/output \
-    deepops/replicator --project=nvidia --min-version=18.04 \
+    deepops/replicator --project=nvidia --min-version=17.12 \
                        --api-key=<your-dgx-or-ngc-api-key>
 ```
 
@@ -25,7 +25,7 @@ and TensorRT, you would simply add `--image` for each option, e.g.
 
 ```
 docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock -v /tmp:/output \
-    deepops/replicator --project=nvidia --min-version=18.04 \
+    deepops/replicator --project=nvidia --min-version=17.12 \
                        --image=tensorflow --image=pytorch --image=tensorrt \
                        --dry-run \
                        --api-key=<your-dgx-or-ngc-api-key>
@@ -38,22 +38,125 @@ Note: a `state.yml` file will be created the output directory.  This saved state
 avoid pulling images that were previously pulled.  If you wish to repull and save an image, just
 delete the entry in `state.yml` corresponding to the `image_name` and `tag` you wish to refresh.
 
+## Kubernetes Deployment
+
+If you don't already have a `deepops` namespace, create one now.
+
+```
+kubectl create namespace deepops
+```
+
+Next, create a secret with your NGC API Key
+
+```
+kubectl -n deepops create secret generic  ngc-secret
+--from-literal=apikey=<your-api-key-goes-here>
+```
+
+Next, create a persistent volume claim that will life outside the lifecycle of the CronJob. If
+you are using [DeepOps](https://github.com/nvidia/deepops) you can use a Rook/Ceph PVC similar
+to:
+
+```
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ngc-replicator-pvc
+  namespace: deepops
+  labels:
+    app: ngc-replicator
+spec:
+  storageClassName: rook-raid0-retain  # <== Replace with your StorageClass
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 32Mi
+```
+
+Finally, create a `CronJob` that executes the replicator on a schedule.  This
+eample run the replicator every hour.  Note: This example used 
+[Rook](https://rook.io) block storage to provide a persistent volume to hold the
+`state.yml` between executions.  This ensures you will only download new
+container images. For more details, see our [DeepOps
+project](https://github.com/nvidia/deepops).
+
+```
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: replicator-config
+  namespace: deepops
+data:
+  ngc-update.sh: |
+    #!/bin/bash
+    ngc_replicator                                        \
+      --project=nvidia                                    \
+      --min-version=$(date +"%y.%m" -d "1 month ago")     \
+      --py-version=py3                                    \
+      --image=tensorflow --image=pytorch --image=tensorrt \
+      --no-exporter                                       \
+      --registry-url=registry.local  # <== Replace with your local repo
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: ngc-replicator
+  namespace: deepops
+  labels:
+    app: ngc-replicator
+spec:
+  schedule: "0 */1 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          nodeSelector:
+            node-role.kubernetes.io/master: ""
+          containers:
+            - name: replicator
+              image: deepops/replicator
+              imagePullPolicy: Always
+              command: [ "/bin/sh", "-c", "/ngc-update/ngc-update.sh" ]
+              env:
+              - name: NGC_REPLICATOR_API_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: ngc-secret
+                    key: apikey
+              volumeMounts:
+              - name: registry-config
+                mountPath: /ngc-update
+              - name: docker-socket
+                mountPath: /var/run/docker.sock
+              - name: ngc-replicator-storage
+                mountPath: /output
+          volumes:
+            - name: registry-config
+              configMap:
+                name: replicator-config
+                defaultMode: 0777
+            - name: docker-socket
+              hostPath:
+                path: /var/run/docker.sock
+                type: File
+            - name: ngc-replicator-storage
+              persistentVolumeClaim:
+                claimName: ngc-replicator-pvc
+          restartPolicy: Never
+```
+
 ## Developer Quickstart
 
 ```
-cd python && make
-cd replicator
 make dev
 py.test
 ```
 
-## Copyright and License
+## TODOs
 
-This project is released under the [BSD 3-clause license](https://github.com/NVIDIA/ngc-container-replicator/blob/master/LICENSE).
-
-## Issues and Contributing
-
-A signed copy of the [Contributor License Agreement](https://raw.githubusercontent.com/NVIDIA/ngc-container-replicator/master/CLA) needs to be provided to <a href="mailto:deepops@nvidia.com">deepops@nvidia.com</a> before any change can be accepted.
-
-* Please let us know by [filing a new issue](https://github.com/NVIDIA/ngc-container-replicator/issues/new)
-* You can contribute by opening a [pull request](https://help.github.com/articles/using-pull-requests/)
+- [x] save markdown readmes for each image.  these are not version controlled
+- [x] test local registry push service.  coded, beta testing
+- [ ] add templater to workflow
