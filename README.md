@@ -108,7 +108,7 @@ metadata:
   labels:
     app: ngc-replicator
 spec:
-  schedule: "0 */1 * * *"
+  schedule: "0 4 * * *"
   jobTemplate:
     spec:
       template:
