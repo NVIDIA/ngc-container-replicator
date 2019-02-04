@@ -26,7 +26,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import contextlib
 import logging
+import os
 import shlex
 import subprocess
 import sys
@@ -50,3 +52,13 @@ def execute(command, stdout=None, stderr=None):
     stderr = stderr or sys.stderr
     return subprocess.check_call(shlex.split(command), stdout=stdout,
                                  stderr=stderr)
+
+
+@contextlib.contextmanager
+def cd(path):
+    old_dir = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(old_dir)
