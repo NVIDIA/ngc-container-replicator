@@ -266,7 +266,7 @@ class Replicator:
             if image_name not in local: continue
             for tag, docker_id in tag_data.items():
                 if tag not in local[image_name]: continue
-                if docker_id != local[image_name][tag]:
+                if docker_id.get("docker_id") != local[image_name][tag]:
                     log.debug("%s:%s changed on server" % (image_name, tag))
                     to_pull[image_name][tag] = docker_id
 
