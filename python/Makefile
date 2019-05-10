@@ -79,7 +79,7 @@ release: push
 
 clean:
 	@rm -f .Dockerfile 2> /dev/null ||:
-	@find . -name "__pycache__" | xargs sudo rm -rf
+	@find . -name "__pycache__" | xargs rm -rf
 	@docker rm -v `docker ps -a -q -f "status=exited"` 2> /dev/null ||:
 	@docker rmi `docker images -q -f "dangling=true"` 2> /dev/null ||:
 
