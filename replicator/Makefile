@@ -15,6 +15,7 @@ build:
 	@echo ${CACHE} >> .Dockerfile
 	@cat Dockerfile >> .Dockerfile
 	@echo "RUN rm -f /etc/apt/apt.conf.d/01proxy" >> .Dockerfile
+	@cat .singularity >> .Dockerfile
 	docker build -t ${IMAGE_NAME} -f .Dockerfile .
 
 dev: build

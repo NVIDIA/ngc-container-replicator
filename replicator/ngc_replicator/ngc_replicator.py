@@ -65,6 +65,9 @@ class Replicator:
             self.third_party_images.extend(self.read_external_images_file())
         if self.export_to_tarfile:
             log.info("tarfiles will be saved to {}".format(self.output_path))
+        self.export_to_singularity = self.config("singularity")
+        if self.export_to_singularity:
+            log.info("singularity images will be saved to {}".format(self.output_path))
         log.info("Replicator initialization complete")
 
     def read_external_images_file(self):
@@ -180,6 +183,20 @@ class Replicator:
             self.nvcr_client.save(url, path=self.output_path)
             self.progress.update_step(key="{}:{}".format(image_name, tag), status="complete", subHeader="Saved {}".format(tarfile))
             log.info("Saved image: %s --> %s" % (url, tarfile))
+        if self.export_to_singularity:
+            sif = os.path.join(self.output_path, "{}.sif".format(url).replace("/", "_"))
+            if os.path.exists(sif):
+                log.warning("{} exists; removing and rebuilding".format(sif))
+                os.remove(sif)
+            log.info("cloning %s --> %s" % (url, sif))
+            self.progress.update_step(key="{}:{}".format(image_name, tag), status="running", subHeader="Pulling image from Registry")
+            self.update_progress()
+            self.nvcr_client.pull(url)
+            self.progress.update_step(key="{}:{}".format(image_name, tag), status="running", subHeader="Saving image to singularity image file")
+            self.update_progress()
+            utils.execute("singularity build {} docker-daemon://{}".format(sif, url))
+            self.progress.update_step(key="{}:{}".format(image_name, tag), status="complete", subHeader="Saved {}".format(sif))
+            log.info("Saved image: %s --> %s" % (url, sif))
         if self.registry_client:
             push_url = "{}/{}:{}".format(self.registry_url, image_name, tag)
             self.nvcr_client.pull(url)
@@ -316,6 +333,7 @@ class Replicator:
 @click.option("--no-remove", is_flag=True)
 @click.option("--exporter/--no-exporter", default=True)
 @click.option("--templater/--no-templater", default=False)
+@click.option("--singularity/--no-singularity", default=False)
 def main(**config):
     """
     NGC Replication Service
