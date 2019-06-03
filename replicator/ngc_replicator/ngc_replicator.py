@@ -118,7 +118,7 @@ class Replicator:
         self.update_progress(progress_length_unknown=True)
 
         # determine images and tags (and dockerImageIds) from the remote registry
-        filter_fn = self.filter_on_tag if self.min_version else None
+        filter_fn = self.filter_on_tag if self.min_version or self.images else None
         remote_state = self.nvcr.get_state(project=project, filter_fn=filter_fn)
 
         # determine which images need to be fetch for the local state to match the remote
@@ -159,7 +159,7 @@ class Replicator:
     def images_from_state(state):
         for image_name, tag_data in state.items():
             for tag, docker_id in tag_data.items():
-                yield replicator_pb2.DockerImage(name=image_name, tag=tag, docker_id=docker_id)
+                yield replicator_pb2.DockerImage(name=image_name, tag=tag, docker_id=docker_id.get("docker_id", ""))
 
     def clone_image(self, image_name, tag, docker_id):
         if docker_id:
@@ -266,7 +266,7 @@ class Replicator:
             if image_name not in local: continue
             for tag, docker_id in tag_data.items():
                 if tag not in local[image_name]: continue
-                if docker_id != local[image_name][tag]:
+                if docker_id.get("docker_id") != local[image_name][tag]:
                     log.debug("%s:%s changed on server" % (image_name, tag))
                     to_pull[image_name][tag] = docker_id
 
