@@ -34,6 +34,15 @@ docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock -v /tmp:/output
 Note: the `--dry-run` option lets you see what will happen without committing
 to a lengthy download.
 
+Use `--singularity` to generate Singularity image files, e.g.,
+
+```
+docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock -v /tmp:/output \
+    deepops/replicator --project=hpc --image=milc --image=namd \
+                       --singularity --no-exporter \
+                       --api-key=<your-dgx-or-ngc-api-key>
+```
+
 Note: a `state.yml` file will be created the output directory.  This saved state will be used to
 avoid pulling images that were previously pulled.  If you wish to repull and save an image, just
 delete the entry in `state.yml` corresponding to the `image_name` and `tag` you wish to refresh.
