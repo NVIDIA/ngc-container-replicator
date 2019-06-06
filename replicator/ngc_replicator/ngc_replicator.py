@@ -47,9 +47,10 @@ class Replicator:
         if self.config("registry_url"):
             self.registry_url = self.config("registry_url")
             self.registry_client = DockerClient()
-            self.registry_client.login(username=self.config("registry_username"),
-                                       password=self.config("registry_password"),
-                                       registry=self.config("registry_url"))
+            if self.config("registry_username") and self.config("registry_password"):
+                self.registry_client.login(username=self.config("registry_username"),
+                                           password=self.config("registry_password"),
+                                           registry=self.config("registry_url"))
         self.output_path = self.config("output_path") or "/output"
         self.state_path = os.path.join(self.output_path, "state.yml")
         self.state = collections.defaultdict(dict)
