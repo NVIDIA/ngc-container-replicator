@@ -4,18 +4,13 @@ RELEASE_VERSION=0.3.5
 RELEASE_IMAGE ?= deepops/replicator
 
 APT_PROXY ?= "false"
-CACHE="RUN echo 'Acquire::HTTP::Proxy \"${APT_PROXY}\";' >> /etc/apt/apt.conf.d/01proxy"
 
 .PHONY: build tag push release clean distclean
 
-default: clean build
+default: build
 
 build:
-	@echo FROM ${BASE_IMAGE} > .Dockerfile
-	@echo ${CACHE} >> .Dockerfile
-	@cat Dockerfile >> .Dockerfile
-	@echo "RUN rm -f /etc/apt/apt.conf.d/01proxy" >> .Dockerfile
-	docker build -t ${IMAGE_NAME} -f .Dockerfile .
+	docker build --build-arg BASE_IMAGE=${BASE_IMAGE} --build-arg APT_PROXY=${APT_PROXY} -t ${IMAGE_NAME} -f Dockerfile .
 
 dev: build
 	docker build ${CACHES} -t ${IMAGE_NAME}:dev -f Dockerfile.test .

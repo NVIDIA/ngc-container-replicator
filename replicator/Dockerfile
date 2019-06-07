@@ -1,16 +1,8 @@
-COPY requirements.txt /tmp/requirements.txt
-RUN pip install -r /tmp/requirements.txt && rm -f /tmp/requirements.txt
+ARG BASE_IMAGE=deepops_python
+FROM $BASE_IMAGE AS singularity
 
-WORKDIR /source/ngc_replicator
-COPY . .
-RUN mkdir -p /output
-RUN python setup.py install
-ENTRYPOINT ["ngc_replicator"]
-
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        jq && \
-    rm -rf /var/lib/apt/lists/*
+ARG APT_PROXY=false
+RUN echo "Acquire::HTTP::Proxy \"$APT_PROXY\";" >> /etc/apt/apt.conf.d/01proxy
 
 # Singularity build requirements
 RUN apt-get update -y && \
@@ -41,10 +33,38 @@ RUN mkdir -p /tmp && wget -q -nc --no-check-certificate -P /tmp https://github.c
     cd $GOPATH/src/github.com/sylabs/singularity && \
     go get -u -v github.com/golang/dep/cmd/dep && \
     cd $GOPATH/src/github.com/sylabs/singularity && \
-    ./mconfig && \
+    ./mconfig --prefix=/usr/local/singularity && \
     cd builddir && \
     make && \
     make install && \
     rm -rf /tmp/singularity-3.2.1.tar.gz
 
+FROM $BASE_IMAGE
+
+ARG APT_PROXY=false
+RUN echo "Acquire::HTTP::Proxy \"$APT_PROXY\";" >> /etc/apt/apt.conf.d/01proxy
+
+# Singularity
+RUN apt-get update -y && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        squashfs-tools && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=singularity /usr/local/singularity /usr/local/singularity
+ENV PATH=/usr/local/singularity/bin:$PATH
+
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install -r /tmp/requirements.txt && rm -f /tmp/requirements.txt
+
+WORKDIR /source/ngc_replicator
+COPY . .
+RUN mkdir -p /output
+RUN python setup.py install
+ENTRYPOINT ["ngc_replicator"]
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        jq && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY scripts/docker-utils /usr/bin/docker-utils
+
+RUN rm -f /etc/apt/apt.conf.d/01proxy
