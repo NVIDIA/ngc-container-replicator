@@ -249,7 +249,8 @@ class NGCRegistry(BaseRegistry):
         """
         org_name, repo_name = image_name.split('/')
         endpoint = "org/{}/repos/{}/images".format(org_name, repo_name)
-        return self._get(endpoint)['images']
+        response = self._get(endpoint)
+        return response['images'] if 'images' in response else []
 
     def get_state(self, project=None, filter_fn=None):
         names = self.get_image_names(project=project)
