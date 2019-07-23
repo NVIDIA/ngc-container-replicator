@@ -22,7 +22,7 @@ test_requirements = [
 
 setup(
     name='ngc_replicator',
-    version='0.3.5',
+    version='0.4.0',
     description="NGC Replication Service",
     author="Ryan Olson",
     author_email='rolson@nvidia.com',

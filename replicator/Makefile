@@ -1,6 +1,6 @@
 BASE_IMAGE ?= deepops_python
 IMAGE_NAME ?= replicator
-RELEASE_VERSION=0.3.5
+RELEASE_VERSION=0.4.0
 RELEASE_IMAGE ?= deepops/replicator
 
 APT_PROXY ?= "false"

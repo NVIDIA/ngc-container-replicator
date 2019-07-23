@@ -4,4 +4,4 @@
 
 __author__ = """Ryan Olson"""
 __email__ = 'rolson@nvidia.com'
-__version__ = '0.3.5'
+__version__ = '0.4.0'
