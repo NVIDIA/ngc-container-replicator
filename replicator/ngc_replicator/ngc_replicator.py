@@ -33,10 +33,8 @@ class Replicator:
         self.service = self.config("service")
         if len(api_key) == 40:
             self.nvcr = DGXRegistry(api_key)
-        elif len(api_key) == 84:
-            self.nvcr = NGCRegistry(api_key)
         else:
-            raise RuntimeError("Unable to recognize the API key")
+            self.nvcr = NGCRegistry(api_key)
         self.nvcr_client = DockerClient()
         self.nvcr_client.login(username="$oauthtoken", password=api_key, registry="nvcr.io/v2")
         self.registry_client = None
