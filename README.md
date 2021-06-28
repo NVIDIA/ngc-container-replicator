@@ -44,13 +44,11 @@ In this case, you can add the `--strict-name-match` flag, e.g.
 ```
 docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock -v /tmp:/output \
     deepops/replicator --project=nvidia --min-version=17.12 \
-                       --image=nvidia/tensorflow \
+                       --image=tensorflow \
                        --strict-name-match \
                        --dry-run \
                        --api-key=<your-dgx-or-ngc-api-key>
 ```
-
-Note: when using `--strict-name-match`, the image name must be specified as a full name including project.
 
 Note: a `state.yml` file will be created the output directory.  This saved state will be used to
 avoid pulling images that were previously pulled.  If you wish to repull and save an image, just

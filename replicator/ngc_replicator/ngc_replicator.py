@@ -226,7 +226,7 @@ class Replicator:
                 if (not strict_name_match) and (image in name):
                     log.debug("{} passes filter; matches {}".format(name, image))
                     found = True
-                elif (strict_name_match) and image.strip() == name.strip():
+                elif (strict_name_match) and image.strip() == (name.split('/')[-1]).strip():
                     log.debug("{} passes strict filter; matches {}".format(name, image))
                     found = True
             if not found:
