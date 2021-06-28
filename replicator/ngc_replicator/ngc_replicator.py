@@ -120,7 +120,10 @@ class Replicator:
         self.update_progress(progress_length_unknown=True)
 
         # determine images and tags (and dockerImageIds) from the remote registry
-        filter_fn = self.filter_on_tag if self.min_version or self.images else None
+        if self.config("strict_name_match"):
+            filter_fn = self.filter_on_tag_strict if self.min_version or self.images else None
+        else:
+            filter_fn = self.filter_on_tag if self.min_version or self.images else None
         remote_state = self.nvcr.get_state(project=project, filter_fn=filter_fn)
 
         # determine which images need to be fetch for the local state to match the remote
@@ -209,7 +212,7 @@ class Replicator:
                 log.warning("tried to remove docker image {}, but unexpectedly failed".format(url))
         return image_name, tag, docker_id
 
-    def filter_on_tag(self, *, name, tag, docker_id):
+    def filter_on_tag(self, *, name, tag, docker_id, strict_name_match=False):
         """
         Filter function used by the `nvidia_deepops` library for selecting images.
 
@@ -220,8 +223,11 @@ class Replicator:
             log.debug("filtering on images name, only allow {}".format(self.images))
             found = False
             for image in self.images:
-                if image in name:
+                if (not strict_name_match) and (image in name):
                     log.debug("{} passes filter; matches {}".format(name, image))
+                    found = True
+                elif (strict_name_match) and image.strip() == name.strip():
+                    log.debug("{} passes strict filter; matches {}".format(name, image))
                     found = True
             if not found:
                 log.debug("{} fails filter by image name".format(name))
@@ -246,6 +252,9 @@ class Replicator:
                 pass
         # if you are here, you have passed the tag test
         return True
+
+    def filter_on_tag_strict(self, *, name, tag, docker_id):
+        return self.filter_on_tag(name=name, tag=tag, docker_id=docker_id, strict_name_match=True)
 
     def missing_images(self, remote):
         """
@@ -333,6 +342,7 @@ class Replicator:
 @click.option("--exporter/--no-exporter", default=True)
 @click.option("--templater/--no-templater", default=False)
 @click.option("--singularity/--no-singularity", default=False)
+@click.option("--strict-name-match/--no-strict-name-match", default=False)
 def main(**config):
     """
     NGC Replication Service
