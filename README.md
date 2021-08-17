@@ -20,8 +20,9 @@ docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock -v /tmp:/output
                        --api-key=<your-dgx-or-ngc-api-key>
 ```
 
-You can also filter on specific images.  If you only wanted Tensorflow, PyTorch
-and TensorRT, you would simply add `--image` for each option, e.g.
+You can also filter on specific images.
+If you want to filter only on image names containing the strings "tensorflow",
+"pytorch", and "tensorrt", you would simply add `--image` for each option, e.g.
 
 ```
 docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock -v /tmp:/output \
@@ -33,6 +34,21 @@ docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock -v /tmp:/output
 
 Note: the `--dry-run` option lets you see what will happen without committing
 to a lengthy download.
+
+By default, the `--image` flag does a substring match in order to ensure you match
+all images that may be desired.
+Sometimes, however, you only want to download a specific image with no substring
+matching.
+In this case, you can add the `--strict-name-match` flag, e.g.
+
+```
+docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock -v /tmp:/output \
+    deepops/replicator --project=nvidia --min-version=17.12 \
+                       --image=tensorflow \
+                       --strict-name-match \
+                       --dry-run \
+                       --api-key=<your-dgx-or-ngc-api-key>
+```
 
 Note: a `state.yml` file will be created the output directory.  This saved state will be used to
 avoid pulling images that were previously pulled.  If you wish to repull and save an image, just

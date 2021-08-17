@@ -21,23 +21,24 @@ RUN apt-get update -y && \
 
 # Go
 RUN cd /var/tmp && \
-    mkdir -p /tmp && wget -q -nc --no-check-certificate -P /tmp https://dl.google.com/go/go1.11.linux-amd64.tar.gz && \
-    mkdir -p /usr/local && tar -x -f /tmp/go1.11.linux-amd64.tar.gz -C /usr/local -z && \
-    rm -rf /tmp/go1.11.linux-amd64.tar.gz
+    mkdir -p /tmp && wget -q -nc --no-check-certificate -P /tmp https://dl.google.com/go/go1.13.linux-amd64.tar.gz && \
+    mkdir -p /usr/local && tar -x -f /tmp/go1.13.linux-amd64.tar.gz -C /usr/local -z && \
+    rm -rf /tmp/go1.13.linux-amd64.tar.gz
 ENV GOPATH=/root/go \
     PATH=/usr/local/go/bin:$PATH:/root/go/bin
 
 # Singularity
-RUN mkdir -p /tmp && wget -q -nc --no-check-certificate -P /tmp https://github.com/sylabs/singularity/releases/download/v3.2.1/singularity-3.2.1.tar.gz && \
-    mkdir -p $GOPATH/src/github.com/sylabs && tar -x -f /tmp/singularity-3.2.1.tar.gz -C $GOPATH/src/github.com/sylabs -z && \
+RUN mkdir -p /tmp && wget -q -nc --no-check-certificate -P /tmp https://github.com/sylabs/singularity/releases/download/v3.7.4/singularity-3.7.4.tar.gz && \
+    mkdir -p $GOPATH/src/github.com/sylabs && tar -x -f /tmp/singularity-3.7.4.tar.gz -C $GOPATH/src/github.com/sylabs -z && \
     cd $GOPATH/src/github.com/sylabs/singularity && \
+    go env -w GO111MODULE=off && \
     go get -u -v github.com/golang/dep/cmd/dep && \
     cd $GOPATH/src/github.com/sylabs/singularity && \
     ./mconfig --prefix=/usr/local/singularity && \
     cd builddir && \
     make && \
     make install && \
-    rm -rf /tmp/singularity-3.2.1.tar.gz
+    rm -rf /tmp/singularity-3.7.4.tar.gz
 
 FROM $BASE_IMAGE
 
