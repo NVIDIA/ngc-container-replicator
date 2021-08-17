@@ -1,2 +1,2 @@
-PyYAML==4.2b1
+PyYAML==5.4
 protobuf==3.5.1
