@@ -9,6 +9,6 @@ six==1.10.0
 urllib3==1.26.5
 websocket-client==0.44.0
 contexttimer==0.3.3
-PyYAML==4.2b1
+PyYAML==5.4
 Jinja2==2.11.3
 cookiecutter==1.6.0
