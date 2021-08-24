@@ -54,7 +54,7 @@ class Replicator:
         self.state = collections.defaultdict(dict)
         if os.path.exists(self.state_path):
             with open(self.state_path, "r") as file:
-                tmp = yaml.load(file)
+                tmp = yaml.load(file, Loader=yaml.UnsafeLoader)
             if tmp:
                 for key, val in tmp.items():
                     self.state[key] = val
@@ -71,7 +71,7 @@ class Replicator:
 
     def read_external_images_file(self):
         with open(self.config("external_images"), "r") as file:
-            data = yaml.load(file)
+            data = yaml.load(file, Loader=yaml.UnsafeLoader)
         images = data.get("images", [])
         images = [replicator_pb2.DockerImage(name=image["name"], tag=image.get("tag", "latest")) for image in images]
         return images
