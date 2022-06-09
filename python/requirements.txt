@@ -11,4 +11,4 @@ websocket-client==0.44.0
 contexttimer==0.3.3
 PyYAML==5.4
 Jinja2==2.11.3
-cookiecutter==1.6.0
+cookiecutter==2.1.1
